@@ -119,6 +119,8 @@ libspdm_return_t pci_doe_send_receive_data(const void *pci_doe_context,
     return LIBSPDM_STATUS_SUCCESS;
 }
 
+
+
 void *spdm_client_init(void)
 {
     void *spdm_context;
@@ -191,6 +193,7 @@ void *spdm_client_init(void)
                                         spdm_device_release_receiver_buffer);
     libspdm_set_scratch_buffer (spdm_context, m_scratch_buffer, scratch_buffer_size);
 
+#ifdef CNV_FW_DIRECT_DISABLE
     if (m_load_state_file_name != NULL) {
         status = spdm_load_negotiated_state(spdm_context, true);
         if (LIBSPDM_STATUS_IS_ERROR(status)) {
@@ -199,6 +202,7 @@ void *spdm_client_init(void)
             return NULL;
         }
     }
+#endif
 
     if (m_use_version != 0) {
         libspdm_zero_mem(&parameter, sizeof(parameter));
@@ -235,9 +239,11 @@ void *spdm_client_init(void)
     data8 = m_support_measurement_spec;
     libspdm_set_data(spdm_context, LIBSPDM_DATA_MEASUREMENT_SPEC, &parameter,
                      &data8, sizeof(data8));
+    m_support_asym_algo = SPDM_ALGORITHMS_BASE_ASYM_ALGO_TPM_ALG_ECDSA_ECC_NIST_P384;
     data32 = m_support_asym_algo;
     libspdm_set_data(spdm_context, LIBSPDM_DATA_BASE_ASYM_ALGO, &parameter,
                      &data32, sizeof(data32));
+    m_support_hash_algo = SPDM_ALGORITHMS_BASE_HASH_ALGO_TPM_ALG_SHA_384;
     data32 = m_support_hash_algo;
     libspdm_set_data(spdm_context, LIBSPDM_DATA_BASE_HASH_ALGO, &parameter,
                      &data32, sizeof(data32));
@@ -257,6 +263,7 @@ void *spdm_client_init(void)
     libspdm_set_data(spdm_context, LIBSPDM_DATA_OTHER_PARAMS_SUPPORT, &parameter,
                      &data8, sizeof(data8));
 
+#ifdef CNV_FW_DIRECT_DISABLE
     if (m_load_state_file_name == NULL) {
         /* Skip if state is loaded*/
         status = libspdm_init_connection(
@@ -278,6 +285,25 @@ void *spdm_client_init(void)
             }
         }
     }
+#else
+    status = spdm_read_cmds_from_file(spdm_context);
+    if (LIBSPDM_STATUS_IS_ERROR(status)) {
+	free(m_spdm_context);
+	m_spdm_context = NULL;
+        return NULL;
+    }
+
+    status = spdm_read_pk_from_file(spdm_context);
+
+    status = spdm_verify_response_msg(spdm_context);
+    if (LIBSPDM_STATUS_IS_ERROR(status)) {
+	free(m_spdm_context);
+	m_spdm_context = NULL;
+        return NULL;
+    }
+
+    return m_spdm_context;
+#endif
 
     if (m_use_version == 0) {
         libspdm_zero_mem(&parameter, sizeof(parameter));

@@ -87,12 +87,13 @@ bool init_client(SOCKET *sock, uint16_t port)
 
 bool platform_client_routine(uint16_t port_number)
 {
-    SOCKET platform_socket;
-    bool result;
-    uint32_t response;
-    size_t response_size;
-    libspdm_return_t status;
+    //SOCKET platform_socket;
+    //bool result;
+    //uint32_t response;
+    //size_t response_size;
+//    libspdm_return_t status;
 
+#ifdef CNV_FW_DIRECT_DISABLE
 #ifdef _MSC_VER
     WSADATA ws;
     if (WSAStartup(MAKEWORD(2, 2), &ws) != 0) {
@@ -130,12 +131,14 @@ bool platform_client_routine(uint16_t port_number)
             goto done;
         }
     }
+#endif
 
     m_spdm_context = spdm_client_init();
     if (m_spdm_context == NULL) {
         goto done;
     }
 
+#if 0
     /* Do test - begin*/
 #if (LIBSPDM_ENABLE_CAPABILITY_CERT_CAP && LIBSPDM_ENABLE_CAPABILITY_CHAL_CAP)
     status = do_authentication_via_spdm();
@@ -202,13 +205,14 @@ bool platform_client_routine(uint16_t port_number)
 #endif /*(LIBSPDM_ENABLE_CAPABILITY_KEY_EX_CAP || LIBSPDM_ENABLE_CAPABILITY_PSK_EX_CAP)*/
     }
     /* Do test - end*/
+#endif
 
 done:
+#if 0
     response_size = 0;
     result = communicate_platform_data(
         platform_socket, SOCKET_SPDM_COMMAND_SHUTDOWN - m_exe_mode,
         NULL, 0, &response, &response_size, NULL);
-
     if (m_spdm_context != NULL) {
         libspdm_deinit_context(m_spdm_context);
         free(m_spdm_context);
@@ -220,7 +224,7 @@ done:
 #ifdef _MSC_VER
     WSACleanup();
 #endif
-
+#endif
     return true;
 }
 
