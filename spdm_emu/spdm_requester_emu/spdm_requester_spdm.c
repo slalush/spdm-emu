@@ -5,6 +5,16 @@
  **/
 
 #include "spdm_requester_emu.h"
+//#include "internal/libspdm_requester_lib.h"
+
+libspdm_return_t libspdm_send_receive_key_exchange_ex(
+    void *spdm_context, uint8_t measurement_hash_type,
+    uint8_t slot_id, uint8_t session_policy, uint32_t *session_id,
+    uint8_t *heartbeat_period,
+    uint8_t *req_slot_id_param, void *measurement_hash,
+    const void *requester_random_in,
+    void *requester_random,
+    void *responder_random);
 
 void *m_spdm_context;
 void *m_scratch_buffer;
@@ -286,6 +296,15 @@ void *spdm_client_init(void)
         }
     }
 #else
+#if 0
+    status = libspdm_send_receive_key_exchange_ex(spdm_context, 0,
+        0xFF, 0, NULL,
+		NULL,
+		NULL, NULL,
+		NULL,
+		NULL,
+		NULL);
+#endif
     status = spdm_read_cmds_from_file(spdm_context);
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
 	free(m_spdm_context);
@@ -294,6 +313,7 @@ void *spdm_client_init(void)
     }
 
     status = spdm_read_pk_from_file(spdm_context);
+  //  status = spdm_read_local_pk_from_file(spdm_context);
 
     status = spdm_verify_response_msg(spdm_context);
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
