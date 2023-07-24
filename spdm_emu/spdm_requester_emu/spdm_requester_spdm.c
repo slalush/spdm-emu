@@ -293,7 +293,7 @@ void *spdm_client_init(void)
         return NULL;
     }
 
- //   status = spdm_read_pk_from_file(spdm_context);
+   // status = spdm_read_pk_from_file(spdm_context);
 
     status = spdm_verify_response_msg(spdm_context);
     if (LIBSPDM_STATUS_IS_ERROR(status)) {
